@@ -1,11 +1,11 @@
-package com.houarizegai.calculator.util;
+package com.houarizegai.calculator.service;
 
 import java.awt.*;
 import java.util.Optional;
 
-public class ColorUtil {
+public class ColorConverter {
 
-    private ColorUtil() {
+    private ColorConverter() {
         throw new AssertionError("Constructor is not allowed");
     }
 

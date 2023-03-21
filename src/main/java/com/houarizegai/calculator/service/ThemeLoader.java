@@ -1,9 +1,9 @@
-package com.houarizegai.calculator.theme;
+package com.houarizegai.calculator.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.houarizegai.calculator.theme.properties.Theme;
-import com.houarizegai.calculator.theme.properties.ThemeList;
+import com.houarizegai.calculator.data.Theme;
+import com.houarizegai.calculator.data.ThemeList;
 
 import java.io.IOException;
 import java.util.Collections;

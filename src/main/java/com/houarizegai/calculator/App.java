@@ -1,6 +1,6 @@
 package com.houarizegai.calculator;
 
-import com.houarizegai.calculator.ui.CalculatorUI;
+import com.houarizegai.calculator.view.CalculatorUI;
 
 public class App {
 

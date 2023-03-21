@@ -1,4 +1,4 @@
-package com.houarizegai.calculator.theme.properties;
+package com.houarizegai.calculator.data;
 
 public class Theme {
 
