@@ -2,14 +2,18 @@ package com.houarizegai.calculator.view;
 
 import com.houarizegai.calculator.data.Theme;
 import com.houarizegai.calculator.service.ThemeLoader;
+import com.houarizegai.calculator.view.title.Buttons;
 
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.event.ItemEvent;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.awt.Color;
-import javax.swing.*;
 
 import static com.houarizegai.calculator.service.ColorConverter.hex2Color;
 
@@ -18,6 +22,7 @@ public class CalculatorUI {
     private static final String FONT_NAME = "Comic Sans MS";
     private static final String DOUBLE_OR_NUMBER_REGEX = "(-?\\d+[.]\\d*)|(\\d+)|(-\\d+)";
     private static final String APPLICATION_TITLE = "Calculator";
+    private static final String INITIAL_VALUE = "0";
     private static final int WINDOW_WIDTH = 410;
     private static final int WINDOW_HEIGHT = 600;
     private static final int BUTTON_WIDTH = 80;
@@ -52,7 +57,7 @@ public class CalculatorUI {
     private JButton btnPower;
     private JButton btnLog;
 
-    private char selectedOperator = ' ';
+    private Buttons selectedOperator = Buttons.NOTHING;
     private boolean shouldProceed = true; // For calculate with Opt != (=)
     private boolean shouldAddToDisplay = true; // Connect numbers in display
     private double typedValue = 0;
@@ -81,19 +86,19 @@ public class CalculatorUI {
         window.setVisible(true);
     }
 
-    public double calculate(double firstNumber, double secondNumber, char operator) {
+    public double calculate(double firstNumber, double secondNumber, Buttons operator) {
         switch (operator) {
-            case '+':
+            case ADD:
                 return firstNumber + secondNumber;
-            case '-':
+            case MINUS:
                 return firstNumber - secondNumber;
-            case '*':
+            case MULT:
                 return firstNumber * secondNumber;
-            case '/':
+            case DIV:
                 return firstNumber / secondNumber;
-            case '%':
+            case PERCENT:
                 return firstNumber % secondNumber;
-            case '^':
+            case POW:
                 return Math.pow(firstNumber, secondNumber);
             default:
                 return secondNumber;
@@ -116,7 +121,7 @@ public class CalculatorUI {
     }
 
     private void initInputScreen(int[] columns, int[] rows) {
-        inputScreen = new JTextField("0");
+        inputScreen = new JTextField(INITIAL_VALUE);
         inputScreen.setBounds(columns[0], rows[0], 350, 70);
         inputScreen.setEditable(false);
         inputScreen.setBackground(Color.WHITE);
@@ -149,14 +154,14 @@ public class CalculatorUI {
     }
 
     private void initButtons(int[] columns, int[] rows) {
-        btnC = createButton("C", columns[0], rows[1]);
+        btnC = createButton(Buttons.RESET.title, columns[0], rows[1]);
         btnC.addActionListener(event -> {
-            inputScreen.setText("0");
-            selectedOperator = ' ';
+            inputScreen.setText(INITIAL_VALUE);
+            selectedOperator = Buttons.NOTHING;
             typedValue = 0;
         });
 
-        btnBack = createButton("<-", columns[1], rows[1]);
+        btnBack = createButton(Buttons.BACKSPACE.title, columns[1], rows[1]);
         btnBack.addActionListener(event -> {
             String str = inputScreen.getText();
             StringBuilder str2 = new StringBuilder();
@@ -164,13 +169,13 @@ public class CalculatorUI {
                 str2.append(str.charAt(i));
             }
             if (str2.toString().equals("")) {
-                inputScreen.setText("0");
+                inputScreen.setText(INITIAL_VALUE);
             } else {
                 inputScreen.setText(str2.toString());
             }
         });
 
-        btnMod = createButton("%", columns[2], rows[1]);
+        btnMod = createButton(Buttons.PERCENT.title, columns[2], rows[1]);
         btnMod.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()) || !shouldProceed)
                 return;
@@ -181,12 +186,12 @@ public class CalculatorUI {
             } else {
                 inputScreen.setText(String.valueOf(typedValue));
             }
-            selectedOperator = '%';
+            selectedOperator = Buttons.PERCENT;
             shouldProceed = false;
             shouldAddToDisplay = false;
         });
 
-        btnDiv = createButton("/", columns[3], rows[1]);
+        btnDiv = createButton(Buttons.DIV.title, columns[3], rows[1]);
         btnDiv.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -198,60 +203,60 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '/';
+                selectedOperator = Buttons.DIV;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
             } else {
-                selectedOperator = '/';
+                selectedOperator = Buttons.NOTHING;
             }
         });
 
-        btn7 = createButton("7", columns[0], rows[2]);
+        btn7 = createButton(Buttons.SEVEN.title, columns[0], rows[2]);
         btn7.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("7");
+                    inputScreen.setText(Buttons.SEVEN.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "7");
+                    inputScreen.setText(inputScreen.getText() + Buttons.SEVEN.title);
                 }
             } else {
-                inputScreen.setText("7");
+                inputScreen.setText(Buttons.SEVEN.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn8 = createButton("8", columns[1], rows[2]);
+        btn8 = createButton(Buttons.EIGHT.title, columns[1], rows[2]);
         btn8.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("8");
+                    inputScreen.setText(Buttons.EIGHT.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "8");
+                    inputScreen.setText(inputScreen.getText() + Buttons.EIGHT.title);
                 }
             } else {
-                inputScreen.setText("8");
+                inputScreen.setText(Buttons.EIGHT.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn9 = createButton("9", columns[2], rows[2]);
+        btn9 = createButton(Buttons.NINE.title, columns[2], rows[2]);
         btn9.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("9");
+                    inputScreen.setText(Buttons.NINE.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "9");
+                    inputScreen.setText(inputScreen.getText() + Buttons.NINE.title);
                 }
             } else {
-                inputScreen.setText("9");
+                inputScreen.setText(Buttons.NINE.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btnMul = createButton("*", columns[3], rows[2]);
+        btnMul = createButton(Buttons.MULT.title, columns[3], rows[2]);
         btnMul.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -263,60 +268,60 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '*';
+                selectedOperator = Buttons.MULT;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
             } else {
-                selectedOperator = '*';
+                selectedOperator = Buttons.MULT;
             }
         });
 
-        btn4 = createButton("4", columns[0], rows[3]);
+        btn4 = createButton(Buttons.FOUR.title, columns[0], rows[3]);
         btn4.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("4");
+                    inputScreen.setText(Buttons.FOUR.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "4");
+                    inputScreen.setText(inputScreen.getText() + Buttons.FOUR.title);
                 }
             } else {
-                inputScreen.setText("4");
+                inputScreen.setText(Buttons.FOUR.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn5 = createButton("5", columns[1], rows[3]);
+        btn5 = createButton(Buttons.FIVE.title, columns[1], rows[3]);
         btn5.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("5");
+                    inputScreen.setText(Buttons.FIVE.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "5");
+                    inputScreen.setText(inputScreen.getText() + Buttons.FIVE.title);
                 }
             } else {
-                inputScreen.setText("5");
+                inputScreen.setText(Buttons.FIVE.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn6 = createButton("6", columns[2], rows[3]);
+        btn6 = createButton(Buttons.SIX.title, columns[2], rows[3]);
         btn6.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("6");
+                    inputScreen.setText(Buttons.SIX.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "6");
+                    inputScreen.setText(inputScreen.getText() + Buttons.SIX.title);
                 }
             } else {
-                inputScreen.setText("6");
+                inputScreen.setText(Buttons.SIX.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btnSub = createButton("-", columns[3], rows[3]);
+        btnSub = createButton(Buttons.MINUS.title, columns[3], rows[3]);
         btnSub.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -329,60 +334,60 @@ public class CalculatorUI {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
 
-                selectedOperator = '-';
+                selectedOperator = Buttons.MINUS;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
             } else {
-                selectedOperator = '-';
+                selectedOperator = Buttons.MINUS;
             }
         });
 
-        btn1 = createButton("1", columns[0], rows[4]);
+        btn1 = createButton(Buttons.ONE.title, columns[0], rows[4]);
         btn1.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("1");
+                    inputScreen.setText(Buttons.ONE.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "1");
+                    inputScreen.setText(inputScreen.getText() + Buttons.ONE.title);
                 }
             } else {
-                inputScreen.setText("1");
+                inputScreen.setText(Buttons.ONE.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn2 = createButton("2", columns[1], rows[4]);
+        btn2 = createButton(Buttons.TWO.title, columns[1], rows[4]);
         btn2.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("2");
+                    inputScreen.setText(Buttons.TWO.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "2");
+                    inputScreen.setText(inputScreen.getText() + Buttons.TWO.title);
                 }
             } else {
-                inputScreen.setText("2");
+                inputScreen.setText(Buttons.TWO.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn3 = createButton("3", columns[2], rows[4]);
+        btn3 = createButton(Buttons.THREE.title, columns[2], rows[4]);
         btn3.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("3");
+                    inputScreen.setText(Buttons.THREE.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "3");
+                    inputScreen.setText(inputScreen.getText() + Buttons.THREE.title);
                 }
             } else {
-                inputScreen.setText("3");
+                inputScreen.setText(Buttons.THREE.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btnAdd = createButton("+", columns[3], rows[4]);
+        btnAdd = createButton(Buttons.ADD.title, columns[3], rows[4]);
         btnAdd.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -394,43 +399,43 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '+';
+                selectedOperator = Buttons.ADD;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
             } else {
-                selectedOperator = '+';
+                selectedOperator = Buttons.ADD;
             }
         });
 
-        btnPoint = createButton(".", columns[0], rows[5]);
+        btnPoint = createButton(Buttons.DOT.title, columns[0], rows[5]);
         btnPoint.addActionListener(event -> {
             if (shouldAddToDisplay) {
-                if (!inputScreen.getText().contains(".")) {
-                    inputScreen.setText(inputScreen.getText() + ".");
+                if (!inputScreen.getText().contains(Buttons.DOT.title)) {
+                    inputScreen.setText(inputScreen.getText() + Buttons.DOT.title);
                 }
             } else {
-                inputScreen.setText("0.");
+                inputScreen.setText(INITIAL_VALUE + Buttons.DOT.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btn0 = createButton("0", columns[1], rows[5]);
+        btn0 = createButton(Buttons.ZERO.title, columns[1], rows[5]);
         btn0.addActionListener(event -> {
             if (shouldAddToDisplay) {
                 if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText("0");
+                    inputScreen.setText(Buttons.ZERO.title);
                 } else {
-                    inputScreen.setText(inputScreen.getText() + "0");
+                    inputScreen.setText(inputScreen.getText() + Buttons.ZERO.title);
                 }
             } else {
-                inputScreen.setText("0");
+                inputScreen.setText(Buttons.ZERO.title);
                 shouldAddToDisplay = true;
             }
             shouldProceed = true;
         });
 
-        btnEqual = createButton("=", columns[2], rows[5]);
+        btnEqual = createButton(Buttons.EQUAL.title, columns[2], rows[5]);
         btnEqual.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -442,13 +447,13 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '=';
+                selectedOperator = Buttons.EQUAL;
                 shouldAddToDisplay = false;
             }
         });
         btnEqual.setSize(2 * BUTTON_WIDTH + 10, BUTTON_HEIGHT);
 
-        btnRoot = createButton("√", columns[4], rows[1]);
+        btnRoot = createButton(Buttons.SQRT.title, columns[4], rows[1]);
         btnRoot.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -460,13 +465,13 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '√';
+                selectedOperator = Buttons.SQRT;
                 shouldAddToDisplay = false;
             }
         });
         btnRoot.setVisible(false);
 
-        btnPower = createButton("pow", columns[4], rows[2]);
+        btnPower = createButton(Buttons.POW.title, columns[4], rows[2]);
         btnPower.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -478,17 +483,17 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = '^';
+                selectedOperator = Buttons.POW;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
             } else {
-                selectedOperator = '^';
+                selectedOperator = Buttons.POW;
             }
         });
         btnPower.setFont(new Font("Comic Sans MS", Font.PLAIN, 24));
         btnPower.setVisible(false);
 
-        btnLog = createButton("ln", columns[4], rows[3]);
+        btnLog = createButton(Buttons.LN.title, columns[4], rows[3]);
         btnLog.addActionListener(event -> {
             if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
                 return;
@@ -500,7 +505,7 @@ public class CalculatorUI {
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = 'l';
+                selectedOperator = Buttons.LN;
                 shouldAddToDisplay = false;
             }
         });

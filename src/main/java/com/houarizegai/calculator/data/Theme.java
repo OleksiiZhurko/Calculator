@@ -10,6 +10,9 @@ public class Theme {
     private String numbersBackground;
     private String btnEqualBackground;
 
+    public Theme() {
+    }
+
     private Theme(Builder builder) {
         this.name = builder.name;
         this.applicationBackground = builder.applicationBackground;
