@@ -15,8 +15,4 @@ public class ThemeList {
     public void setThemes(List<Theme> themes) {
         this.themes = themes;
     }
-
-    public Map<String, Theme> getThemesAsMap() {
-        return themes.stream().collect(Collectors.toMap(Theme::getName, Function.identity()));
-    }
 }
