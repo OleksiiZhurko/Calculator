@@ -1,0 +1,8 @@
+fontName: "Comic Sans MS"
+applicationTitle: "Calculator"
+windowWidth: 410
+windowHeight: 600
+buttonWidth: 80
+buttonHeight: 70
+marginX: 20
+marginY: 60

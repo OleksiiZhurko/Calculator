@@ -23,8 +23,7 @@ public enum Buttons {
     SIX("6"),
     SEVEN("7"),
     EIGHT("8"),
-    NINE("9"),
-    NOTHING("");
+    NINE("9");
 
     public final String title;
 

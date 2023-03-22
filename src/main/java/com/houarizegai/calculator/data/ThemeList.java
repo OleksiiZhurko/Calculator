@@ -1,11 +1,11 @@
 package com.houarizegai.calculator.data;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ThemeList {
+
+    public static final String RESOURCE_FILE = "theme.yaml";
+
     private List<Theme> themes;
 
     public List<Theme> getThemes() {

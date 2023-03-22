@@ -1,7 +1,8 @@
 package com.houarizegai.calculator.view;
 
+import com.houarizegai.calculator.data.AppDefaults;
 import com.houarizegai.calculator.data.Theme;
-import com.houarizegai.calculator.service.ThemeLoader;
+import com.houarizegai.calculator.service.Calculation;
 import com.houarizegai.calculator.view.title.Buttons;
 
 import javax.swing.JButton;
@@ -19,18 +20,12 @@ import static com.houarizegai.calculator.service.ColorConverter.hex2Color;
 
 public class CalculatorUI {
 
-    private static final String FONT_NAME = "Comic Sans MS";
     private static final String DOUBLE_OR_NUMBER_REGEX = "(-?\\d+[.]\\d*)|(\\d+)|(-\\d+)";
-    private static final String APPLICATION_TITLE = "Calculator";
     private static final String INITIAL_VALUE = "0";
-    private static final int WINDOW_WIDTH = 410;
-    private static final int WINDOW_HEIGHT = 600;
-    private static final int BUTTON_WIDTH = 80;
-    private static final int BUTTON_HEIGHT = 70;
-    private static final int MARGIN_X = 20;
-    private static final int MARGIN_Y = 60;
+    private static final String EMPTY_VALUE = "";
 
-    private final JFrame window;
+    private final Calculation calculation;
+    private JFrame window;
     private JComboBox<String> comboCalculatorType;
     private JComboBox<String> comboTheme;
     private JTextField inputScreen;
@@ -57,22 +52,44 @@ public class CalculatorUI {
     private JButton btnPower;
     private JButton btnLog;
 
-    private Buttons selectedOperator = Buttons.NOTHING;
+    private Buttons selectedOperator;
     private boolean shouldProceed = true; // For calculate with Opt != (=)
     private boolean shouldAddToDisplay = true; // Connect numbers in display
     private double typedValue = 0;
 
     private final Map<String, Theme> themesMap;
+    private final AppDefaults appDefaults;
 
-    public CalculatorUI() {
-        themesMap = ThemeLoader.loadThemes();
+    public CalculatorUI(
+            Calculation calculation,
+            AppDefaults appDefaults,
+            Map<String, Theme> themesMap
+    ) {
+        this.calculation = calculation;
+        this.appDefaults = appDefaults;
+        this.themesMap = themesMap;
+    }
 
-        window = new JFrame(APPLICATION_TITLE);
-        window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+    public void start() {
+        window = new JFrame(appDefaults.getApplicationTitle());
+        window.setSize(appDefaults.getWindowWidth(), appDefaults.getWindowHeight());
         window.setLocationRelativeTo(null);
 
-        int[] columns = {MARGIN_X, MARGIN_X + 90, MARGIN_X + 90 * 2, MARGIN_X + 90 * 3, MARGIN_X + 90 * 4};
-        int[] rows = {MARGIN_Y, MARGIN_Y + 100, MARGIN_Y + 100 + 80, MARGIN_Y + 100 + 80 * 2, MARGIN_Y + 100 + 80 * 3, MARGIN_Y + 100 + 80 * 4};
+        int[] columns = {
+                appDefaults.getMarginX(),
+                appDefaults.getMarginX() + 90,
+                appDefaults.getMarginX() + 90 * 2,
+                appDefaults.getMarginX() + 90 * 3,
+                appDefaults.getMarginX() + 90 * 4
+        };
+        int[] rows = {
+                appDefaults.getMarginY(),
+                appDefaults.getMarginY() + 100,
+                appDefaults.getMarginY() + 100 + 80,
+                appDefaults.getMarginY() + 100 + 80 * 2,
+                appDefaults.getMarginY() + 100 + 80 * 3,
+                appDefaults.getMarginY() + 100 + 80 * 4
+        };
 
         initInputScreen(columns, rows);
         initButtons(columns, rows);
@@ -86,33 +103,13 @@ public class CalculatorUI {
         window.setVisible(true);
     }
 
-    public double calculate(double firstNumber, double secondNumber, Buttons operator) {
-        switch (operator) {
-            case ADD:
-                return firstNumber + secondNumber;
-            case MINUS:
-                return firstNumber - secondNumber;
-            case MULT:
-                return firstNumber * secondNumber;
-            case DIV:
-                return firstNumber / secondNumber;
-            case PERCENT:
-                return firstNumber % secondNumber;
-            case POW:
-                return Math.pow(firstNumber, secondNumber);
-            default:
-                return secondNumber;
-        }
-    }
-
     private void initThemeSelector() {
         comboTheme = createComboBox(themesMap.keySet().toArray(new String[0]), 230, 30, "Theme");
         comboTheme.addItemListener(event -> {
-            if (event.getStateChange() != ItemEvent.SELECTED)
-                return;
-
-            String selectedTheme = (String) event.getItem();
-            applyTheme(themesMap.get(selectedTheme));
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                String selectedTheme = (String) event.getItem();
+                applyTheme(themesMap.get(selectedTheme));
+            }
         });
 
         if (themesMap.entrySet().iterator().hasNext()) {
@@ -125,30 +122,29 @@ public class CalculatorUI {
         inputScreen.setBounds(columns[0], rows[0], 350, 70);
         inputScreen.setEditable(false);
         inputScreen.setBackground(Color.WHITE);
-        inputScreen.setFont(new Font(FONT_NAME, Font.PLAIN, 33));
+        inputScreen.setFont(new Font(appDefaults.getFontName(), Font.PLAIN, 33));
         window.add(inputScreen);
     }
 
     private void initCalculatorTypeSelector() {
         comboCalculatorType = createComboBox(new String[]{"Standard", "Scientific"}, 20, 30, "Calculator type");
         comboCalculatorType.addItemListener(event -> {
-            if (event.getStateChange() != ItemEvent.SELECTED)
-                return;
-
-            String selectedItem = (String) event.getItem();
-            switch (selectedItem) {
-                case "Standard":
-                    window.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-                    btnRoot.setVisible(false);
-                    btnPower.setVisible(false);
-                    btnLog.setVisible(false);
-                    break;
-                case "Scientific":
-                    window.setSize(WINDOW_WIDTH + 80, WINDOW_HEIGHT);
-                    btnRoot.setVisible(true);
-                    btnPower.setVisible(true);
-                    btnLog.setVisible(true);
-                    break;
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                String selectedItem = (String) event.getItem();
+                switch (selectedItem) {
+                    case "Standard":
+                        window.setSize(appDefaults.getWindowWidth(), appDefaults.getWindowHeight());
+                        btnRoot.setVisible(false);
+                        btnPower.setVisible(false);
+                        btnLog.setVisible(false);
+                        break;
+                    case "Scientific":
+                        window.setSize(appDefaults.getWindowWidth() + 80, appDefaults.getWindowHeight());
+                        btnRoot.setVisible(true);
+                        btnPower.setVisible(true);
+                        btnLog.setVisible(true);
+                        break;
+                }
             }
         });
     }
@@ -157,255 +153,52 @@ public class CalculatorUI {
         btnC = createButton(Buttons.RESET.title, columns[0], rows[1]);
         btnC.addActionListener(event -> {
             inputScreen.setText(INITIAL_VALUE);
-            selectedOperator = Buttons.NOTHING;
+            selectedOperator = null;
             typedValue = 0;
         });
 
         btnBack = createButton(Buttons.BACKSPACE.title, columns[1], rows[1]);
         btnBack.addActionListener(event -> {
             String str = inputScreen.getText();
-            StringBuilder str2 = new StringBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
             for (int i = 0; i < (str.length() - 1); i++) {
-                str2.append(str.charAt(i));
+                stringBuilder.append(str.charAt(i));
             }
-            if (str2.toString().equals("")) {
+            if (stringBuilder.toString().equals(EMPTY_VALUE)) {
                 inputScreen.setText(INITIAL_VALUE);
             } else {
-                inputScreen.setText(str2.toString());
+                inputScreen.setText(stringBuilder.toString());
             }
         });
 
         btnMod = createButton(Buttons.PERCENT.title, columns[2], rows[1]);
         btnMod.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()) || !shouldProceed)
-                return;
-
-            typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-            if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                inputScreen.setText(String.valueOf((int) typedValue));
-            } else {
-                inputScreen.setText(String.valueOf(typedValue));
-            }
-            selectedOperator = Buttons.PERCENT;
-            shouldProceed = false;
-            shouldAddToDisplay = false;
-        });
-
-        btnDiv = createButton(Buttons.DIV.title, columns[3], rows[1]);
-        btnDiv.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
+            if (Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()) && shouldProceed) {
+                typedValue = calculation.calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
                 if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
                     inputScreen.setText(String.valueOf((int) typedValue));
                 } else {
                     inputScreen.setText(String.valueOf(typedValue));
                 }
-                selectedOperator = Buttons.DIV;
+                selectedOperator = Buttons.PERCENT;
                 shouldProceed = false;
                 shouldAddToDisplay = false;
-            } else {
-                selectedOperator = Buttons.NOTHING;
             }
         });
 
-        btn7 = createButton(Buttons.SEVEN.title, columns[0], rows[2]);
-        btn7.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.SEVEN.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.SEVEN.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.SEVEN.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn8 = createButton(Buttons.EIGHT.title, columns[1], rows[2]);
-        btn8.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.EIGHT.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.EIGHT.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.EIGHT.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn9 = createButton(Buttons.NINE.title, columns[2], rows[2]);
-        btn9.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.NINE.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.NINE.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.NINE.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btnMul = createButton(Buttons.MULT.title, columns[3], rows[2]);
-        btnMul.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-                if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                    inputScreen.setText(String.valueOf((int) typedValue));
-                } else {
-                    inputScreen.setText(String.valueOf(typedValue));
-                }
-                selectedOperator = Buttons.MULT;
-                shouldProceed = false;
-                shouldAddToDisplay = false;
-            } else {
-                selectedOperator = Buttons.MULT;
-            }
-        });
-
-        btn4 = createButton(Buttons.FOUR.title, columns[0], rows[3]);
-        btn4.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.FOUR.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.FOUR.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.FOUR.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn5 = createButton(Buttons.FIVE.title, columns[1], rows[3]);
-        btn5.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.FIVE.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.FIVE.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.FIVE.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn6 = createButton(Buttons.SIX.title, columns[2], rows[3]);
-        btn6.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.SIX.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.SIX.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.SIX.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btnSub = createButton(Buttons.MINUS.title, columns[3], rows[3]);
-        btnSub.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-                if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                    inputScreen.setText(String.valueOf((int) typedValue));
-                } else {
-                    inputScreen.setText(String.valueOf(typedValue));
-                }
-
-                selectedOperator = Buttons.MINUS;
-                shouldProceed = false;
-                shouldAddToDisplay = false;
-            } else {
-                selectedOperator = Buttons.MINUS;
-            }
-        });
-
-        btn1 = createButton(Buttons.ONE.title, columns[0], rows[4]);
-        btn1.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.ONE.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.ONE.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.ONE.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn2 = createButton(Buttons.TWO.title, columns[1], rows[4]);
-        btn2.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.TWO.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.TWO.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.TWO.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btn3 = createButton(Buttons.THREE.title, columns[2], rows[4]);
-        btn3.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.THREE.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.THREE.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.THREE.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
-
-        btnAdd = createButton(Buttons.ADD.title, columns[3], rows[4]);
-        btnAdd.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-                if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                    inputScreen.setText(String.valueOf((int) typedValue));
-                } else {
-                    inputScreen.setText(String.valueOf(typedValue));
-                }
-                selectedOperator = Buttons.ADD;
-                shouldProceed = false;
-                shouldAddToDisplay = false;
-            } else {
-                selectedOperator = Buttons.ADD;
-            }
-        });
+        btnDiv = createOperationButton(Buttons.DIV, columns[3], rows[1]);
+        btn7 = createNumberButton(Buttons.SEVEN.title, columns[0], rows[2]);
+        btn8 = createNumberButton(Buttons.EIGHT.title, columns[1], rows[2]);
+        btn9 = createNumberButton(Buttons.NINE.title, columns[2], rows[2]);
+        btnMul = createOperationButton(Buttons.MULT, columns[3], rows[2]);
+        btn4 = createNumberButton(Buttons.FOUR.title, columns[0], rows[3]);
+        btn5 = createNumberButton(Buttons.FIVE.title, columns[1], rows[3]);
+        btn6 = createNumberButton(Buttons.SIX.title, columns[2], rows[3]);
+        btnSub = createOperationButton(Buttons.MINUS, columns[3], rows[3]);
+        btn1 = createNumberButton(Buttons.ONE.title, columns[0], rows[4]);
+        btn2 = createNumberButton(Buttons.TWO.title, columns[1], rows[4]);
+        btn3 = createNumberButton(Buttons.THREE.title, columns[2], rows[4]);
+        btnAdd = createOperationButton(Buttons.ADD, columns[3], rows[4]);
 
         btnPoint = createButton(Buttons.DOT.title, columns[0], rows[5]);
         btnPoint.addActionListener(event -> {
@@ -420,38 +213,24 @@ public class CalculatorUI {
             shouldProceed = true;
         });
 
-        btn0 = createButton(Buttons.ZERO.title, columns[1], rows[5]);
-        btn0.addActionListener(event -> {
-            if (shouldAddToDisplay) {
-                if (Pattern.matches("0*", inputScreen.getText())) {
-                    inputScreen.setText(Buttons.ZERO.title);
-                } else {
-                    inputScreen.setText(inputScreen.getText() + Buttons.ZERO.title);
-                }
-            } else {
-                inputScreen.setText(Buttons.ZERO.title);
-                shouldAddToDisplay = true;
-            }
-            shouldProceed = true;
-        });
+        btn0 = createNumberButton(Buttons.ZERO.title, columns[1], rows[5]);
 
         btnEqual = createButton(Buttons.EQUAL.title, columns[2], rows[5]);
         btnEqual.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-                if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                    inputScreen.setText(String.valueOf((int) typedValue));
-                } else {
-                    inputScreen.setText(String.valueOf(typedValue));
+            if (Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText())) {
+                if (shouldProceed) {
+                    typedValue = calculation.calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
+                    if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
+                        inputScreen.setText(String.valueOf((int) typedValue));
+                    } else {
+                        inputScreen.setText(String.valueOf(typedValue));
+                    }
+                    selectedOperator = Buttons.EQUAL;
+                    shouldAddToDisplay = false;
                 }
-                selectedOperator = Buttons.EQUAL;
-                shouldAddToDisplay = false;
             }
         });
-        btnEqual.setSize(2 * BUTTON_WIDTH + 10, BUTTON_HEIGHT);
+        btnEqual.setSize(2 * appDefaults.getButtonWidth() + 10, appDefaults.getButtonHeight());
 
         btnRoot = createButton(Buttons.SQRT.title, columns[4], rows[1]);
         btnRoot.addActionListener(event -> {
@@ -471,26 +250,8 @@ public class CalculatorUI {
         });
         btnRoot.setVisible(false);
 
-        btnPower = createButton(Buttons.POW.title, columns[4], rows[2]);
-        btnPower.addActionListener(event -> {
-            if (!Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText()))
-                return;
-
-            if (shouldProceed) {
-                typedValue = calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
-                if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
-                    inputScreen.setText(String.valueOf((int) typedValue));
-                } else {
-                    inputScreen.setText(String.valueOf(typedValue));
-                }
-                selectedOperator = Buttons.POW;
-                shouldProceed = false;
-                shouldAddToDisplay = false;
-            } else {
-                selectedOperator = Buttons.POW;
-            }
-        });
-        btnPower.setFont(new Font("Comic Sans MS", Font.PLAIN, 24));
+        btnPower = createOperationButton(Buttons.POW, columns[4], rows[2]);
+        btnPower.setFont(new Font(appDefaults.getFontName(), Font.PLAIN, 24));
         btnPower.setVisible(false);
 
         btnLog = createButton(Buttons.LN.title, columns[4], rows[3]);
@@ -524,8 +285,8 @@ public class CalculatorUI {
 
     private JButton createButton(String label, int x, int y) {
         JButton btn = new JButton(label);
-        btn.setBounds(x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
-        btn.setFont(new Font("Comic Sans MS", Font.PLAIN, 28));
+        btn.setBounds(x, y, appDefaults.getButtonWidth(), appDefaults.getButtonHeight());
+        btn.setFont(new Font(appDefaults.getFontName(), Font.PLAIN, 28));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFocusable(false);
         window.add(btn);
@@ -533,59 +294,101 @@ public class CalculatorUI {
         return btn;
     }
 
+    private JButton createNumberButton(String title, int pColumn, int pRow) {
+        JButton button = createButton(title, pColumn, pRow);
+        button.addActionListener(event -> {
+            if (shouldAddToDisplay && !Pattern.matches("0*", inputScreen.getText())) {
+                inputScreen.setText(inputScreen.getText() + title);
+            } else {
+                inputScreen.setText(title);
+                shouldAddToDisplay = true;
+            }
+            shouldProceed = true;
+        });
+        return button;
+    }
+
+    private JButton createOperationButton(Buttons operation, int pColumn, int pRow) {
+        JButton button = createButton(operation.title, pColumn, pRow);
+        button.addActionListener(event -> {
+            if (Pattern.matches(DOUBLE_OR_NUMBER_REGEX, inputScreen.getText())) {
+                if (shouldProceed) {
+                    typedValue = calculation.calculate(typedValue, Double.parseDouble(inputScreen.getText()), selectedOperator);
+                    if (Pattern.matches("-?\\d+[.]0*", String.valueOf(typedValue))) {
+                        inputScreen.setText(String.valueOf((int) typedValue));
+                    } else {
+                        inputScreen.setText(String.valueOf(typedValue));
+                    }
+                    selectedOperator = operation;
+                    shouldProceed = false;
+                    shouldAddToDisplay = false;
+                } else {
+                    selectedOperator = operation;
+                }
+            }
+        });
+        return button;
+    }
+
     private void applyTheme(Theme theme) {
-        window.getContentPane().setBackground(hex2Color(theme.getApplicationBackground()));
+        Color applicationBackgroundColor = hex2Color(theme.getApplicationBackground());
+        Color foregroundColor = hex2Color(theme.getTextColor());
+        Color numbersBackgroundColor = hex2Color(theme.getNumbersBackground());
+        Color operatorBackgroundColor = hex2Color(theme.getOperatorBackground());
+        Color btnEqualBackgroundColor = hex2Color(theme.getBtnEqualBackground());
 
-        comboCalculatorType.setForeground(hex2Color(theme.getTextColor()));
-        comboTheme.setForeground(hex2Color(theme.getTextColor()));
-        inputScreen.setForeground(hex2Color(theme.getTextColor()));
-        btn0.setForeground(hex2Color(theme.getTextColor()));
-        btn1.setForeground(hex2Color(theme.getTextColor()));
-        btn2.setForeground(hex2Color(theme.getTextColor()));
-        btn3.setForeground(hex2Color(theme.getTextColor()));
-        btn4.setForeground(hex2Color(theme.getTextColor()));
-        btn5.setForeground(hex2Color(theme.getTextColor()));
-        btn6.setForeground(hex2Color(theme.getTextColor()));
-        btn7.setForeground(hex2Color(theme.getTextColor()));
-        btn8.setForeground(hex2Color(theme.getTextColor()));
-        btn9.setForeground(hex2Color(theme.getTextColor()));
-        btnPoint.setForeground(hex2Color(theme.getTextColor()));
-        btnC.setForeground(hex2Color(theme.getTextColor()));
-        btnBack.setForeground(hex2Color(theme.getTextColor()));
-        btnMod.setForeground(hex2Color(theme.getTextColor()));
-        btnDiv.setForeground(hex2Color(theme.getTextColor()));
-        btnMul.setForeground(hex2Color(theme.getTextColor()));
-        btnSub.setForeground(hex2Color(theme.getTextColor()));
-        btnAdd.setForeground(hex2Color(theme.getTextColor()));
-        btnRoot.setForeground(hex2Color(theme.getTextColor()));
-        btnLog.setForeground(hex2Color(theme.getTextColor()));
-        btnPower.setForeground(hex2Color(theme.getTextColor()));
-        btnEqual.setForeground(hex2Color(theme.getBtnEqualTextColor()));
+        window.getContentPane().setBackground(applicationBackgroundColor);
 
-        comboCalculatorType.setBackground(hex2Color(theme.getApplicationBackground()));
-        comboTheme.setBackground(hex2Color(theme.getApplicationBackground()));
-        inputScreen.setBackground(hex2Color(theme.getApplicationBackground()));
-        btn0.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn1.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn2.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn3.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn4.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn5.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn6.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn7.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn8.setBackground(hex2Color(theme.getNumbersBackground()));
-        btn9.setBackground(hex2Color(theme.getNumbersBackground()));
-        btnPoint.setBackground(hex2Color(theme.getNumbersBackground()));
-        btnC.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnBack.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnMod.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnDiv.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnMul.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnSub.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnAdd.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnRoot.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnLog.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnPower.setBackground(hex2Color(theme.getOperatorBackground()));
-        btnEqual.setBackground(hex2Color(theme.getBtnEqualBackground()));
+        comboCalculatorType.setForeground(foregroundColor);
+        comboTheme.setForeground(foregroundColor);
+        inputScreen.setForeground(foregroundColor);
+        btn0.setForeground(foregroundColor);
+        btn1.setForeground(foregroundColor);
+        btn2.setForeground(foregroundColor);
+        btn3.setForeground(foregroundColor);
+        btn4.setForeground(foregroundColor);
+        btn5.setForeground(foregroundColor);
+        btn6.setForeground(foregroundColor);
+        btn7.setForeground(foregroundColor);
+        btn8.setForeground(foregroundColor);
+        btn9.setForeground(foregroundColor);
+        btnPoint.setForeground(foregroundColor);
+        btnC.setForeground(foregroundColor);
+        btnBack.setForeground(foregroundColor);
+        btnMod.setForeground(foregroundColor);
+        btnDiv.setForeground(foregroundColor);
+        btnMul.setForeground(foregroundColor);
+        btnSub.setForeground(foregroundColor);
+        btnAdd.setForeground(foregroundColor);
+        btnRoot.setForeground(foregroundColor);
+        btnLog.setForeground(foregroundColor);
+        btnPower.setForeground(foregroundColor);
+        btnEqual.setForeground(foregroundColor);
+
+        comboCalculatorType.setBackground(applicationBackgroundColor);
+        comboTheme.setBackground(applicationBackgroundColor);
+        inputScreen.setBackground(applicationBackgroundColor);
+        btn0.setBackground(numbersBackgroundColor);
+        btn1.setBackground(numbersBackgroundColor);
+        btn2.setBackground(numbersBackgroundColor);
+        btn3.setBackground(numbersBackgroundColor);
+        btn4.setBackground(numbersBackgroundColor);
+        btn5.setBackground(numbersBackgroundColor);
+        btn6.setBackground(numbersBackgroundColor);
+        btn7.setBackground(numbersBackgroundColor);
+        btn8.setBackground(numbersBackgroundColor);
+        btn9.setBackground(numbersBackgroundColor);
+        btnPoint.setBackground(numbersBackgroundColor);
+        btnC.setBackground(operatorBackgroundColor);
+        btnBack.setBackground(operatorBackgroundColor);
+        btnMod.setBackground(operatorBackgroundColor);
+        btnDiv.setBackground(operatorBackgroundColor);
+        btnMul.setBackground(operatorBackgroundColor);
+        btnSub.setBackground(operatorBackgroundColor);
+        btnAdd.setBackground(operatorBackgroundColor);
+        btnRoot.setBackground(operatorBackgroundColor);
+        btnLog.setBackground(operatorBackgroundColor);
+        btnPower.setBackground(operatorBackgroundColor);
+        btnEqual.setBackground(btnEqualBackgroundColor);
     }
 }
